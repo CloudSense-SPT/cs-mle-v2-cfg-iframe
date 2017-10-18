@@ -1,0 +1,13 @@
+{
+  "name": "cs-mle-v2-cfg-iframe",
+  "version": "1.0.0",
+  "description": "Code support for CloudSense Multi Line Editor as an iframe inside of CloudSense CPQ (Configurator) v2 screen.",
+  "author": "CS SPT",
+  "license": "ISC",
+  "dependencies": {
+    "gulp": "^3.9.1",
+    "gulp-jsforce-deploy": "^1.1.2",
+    "gulp-util": "^3.0.8",
+    "gulp-zip": "^4.0.0"
+  }
+}
