@@ -1,0 +1,292 @@
+@charset "UTF-8";
+@font-face {
+	font-family: "mle-icon-font";
+	src:url("../src/fonts/mle-icon-font.eot");
+	src:url("../src/fonts/mle-icon-font.eot?#iefix") format("embedded-opentype"),
+		url("../src/fonts/mle-icon-font.woff") format("woff"),
+		url("../src/fonts/mle-icon-font.ttf") format("truetype"),
+		url("../src/fonts/mle-icon-font.svg#mle-icon-font") format("svg");
+	font-weight: normal;
+	font-style: normal;
+}
+.gridBusyAnimation, .gridBusyAnimation.large {
+	background: transparent url('../src/img/slds_spinner_brand.gif') no-repeat center 2rem / 5rem;
+}
+div.processing {
+	background: rgba(200,200,200,0.5) url('../src/img/slds_spinner_brand.gif') no-repeat center 2rem / 5rem;
+	z-index: 50;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 100%;
+}
+#editorPageButtons {
+	padding: 0;
+}
+.slick-row.ui-widget-content {
+	border: 1px solid transparent;
+}
+.slick-row.ui-widget-content:hover {
+	border: 1px solid #d8dde6;
+	background: #f4f6f9;
+}
+.grantTotalContainer label, .slick-header-column.ui-state-default {
+	text-transform: uppercase;
+	color: #54698d;
+}
+.slick-cell {
+	color: #16325c;
+	border-right-color: #d8dde6;
+	border-bottom-color: #d8dde6;
+}
+.slick-header {
+	border-color: #d8dde6;
+}
+.myGrid {
+	border-color: #d8dde6;
+}
+.btnWrapper button {
+	display: none;
+}
+.btnWrapper label {
+	text-align: center;
+	background-color: #0070d2;
+	border: 1px solid #0070d2;
+	color: #fff;
+	line-height: 1rem;
+	padding: 0.25rem 1rem;
+	border-radius: 0.25rem;
+	cursor: pointer;
+}
+.btnWrapper label:hover {
+	background: #005fb2;
+}
+#editorPageButtons .btnWrapper:nth-child(6) {
+	display: none;
+}
+.footer .btnWrapper {
+	width: auto;
+}
+.uploadFileWrapper input {
+	margin: 0 1rem 0 0;
+	padding: 4px 0;
+}
+.footer .btnWrapper:first-of-type {
+	margin-left: 0;
+}
+#importButtonContainer {
+	padding-left: 1rem !important;
+}
+.viewSettingsPanel {
+	padding: 0;
+	background: #f4f6f9;
+	border: 1px solid #d8dde6;
+	border-radius: .25rem;
+	background-clip: padding-box;
+	color: #16325c;
+}
+.item-details-form {
+	border: 1px solid #d8dde6;
+	border-radius: 0.25rem;
+}
+.item-details-label {
+	color: #54698d;
+}
+h2>span.pageTitle>p {
+	color: #16325c;
+}
+.viewSettingsPanel h2 {
+	display: block;
+	padding: 0.25rem 0.75rem;
+	border-bottom: 1px solid #d8dde6;
+}
+.pageBlock.footer {
+	border-top: 1px solid #d8dde6;
+	padding: 0.75rem 0.75rem;
+	margin: 0;
+}
+.viewSettingsPanel .footer .btnWrapper.right {
+	margin: 0 !important;
+}
+.viewSettingsPanel > div:first-of-type {
+	padding: 0.5rem;
+	background: #fff;
+}
+.grandTotalContainer .grandTotalLabel, .viewSettingsPanel .settingLabel {
+	color: #54698d;
+}
+.viewSettingsPanel .columnSelector .container {
+	border: 1px solid #d8dde6;
+}
+.viewSettingsPanel .columnSelector .content {
+	border: none;
+	border-top: 1px solid #d8dde6;
+}
+.item-details-wrapper {
+	display: flex;
+	align-items: center;
+}
+.ui-datepicker {
+	border: 1px solid #d8dde6;
+}
+.ui-datepicker-header, .ui-datepicker-calendar {
+	background-color: #fff;
+}
+.ui-datepicker-title, .ui-datepicker th {
+	color: #0070d2;
+}
+.ui-datepicker td a.ui-state-active, .ui-datepicker td span.ui-state-active {
+	background-color: #0070d2;
+}
+.item-details-form input[type="text"] {
+	background-color: #fff;
+	color: #16325c;
+	border: 1px solid #d8dde6;
+	border-radius: .25rem;
+	transition: border .1s linear,background-color .1s linear;
+	display: inline-block;
+	padding: 0 1rem 0 .75rem;
+	line-height: 1.875rem;
+	min-height: calc(1.875rem + (1px * 2));
+	width: 100px !important;
+	}
+.item-details-form input:active, .item-details-form input:focus {
+	outline: 0;
+	border-color: #1589ee;
+	background-color: #fff;
+	box-shadow: 0 0 3px #0070D2;
+}
+.viewSettingsPanel .columnSelector .cell.checkbox,
+.viewSettingsPanel .columnSelector .cell.checkbox.selected,
+.Checkmark.unchecked, .Checkmark.checked,
+.viewSettingsPanel .columnSelector .cell.checkbox,
+.slick-cell.celleffortdriven>div.changedRow, .slick-cell.celleffortdriven>div.newRow,
+.slick-cell.celleffortdriven>div.validRow,
+.item-details-form-buttons button.save,
+.item-details-form-buttons button.cancel,
+.ui-datepicker .ui-datepicker-prev,
+.ui-datepicker .ui-datepicker-next {
+	background: none;
+}
+.viewSettingsPanel .columnSelector .cell.checkbox:before,
+.viewSettingsPanel .columnSelector .cell.checkbox.selected:before,
+.Checkmark.unchecked:before, .Checkmark.checked:before,
+.viewSettingsPanel .columnSelector .cell.checkbox:before,
+.slick-cell.celleffortdriven>div.changedRow:before, .slick-cell.celleffortdriven>div.newRow:before,
+.slick-cell.celleffortdriven>div.validRow:before,
+.item-details-form-buttons button:before,
+.ui-datepicker .ui-datepicker-prev:before,
+.ui-datepicker .ui-datepicker-next:before {
+	font-family: "mle-icon-font";
+	color: #0070d2;
+	display: inline-block;
+	vertical-align: middle;
+	font-size: 1rem;
+	width: 100%;
+	text-align: center;
+}
+.viewSettingsPanel .columnSelector .cell.checkbox:before:hover,
+.viewSettingsPanel .columnSelector .cell.checkbox.selected:before:hover,
+.Checkmark.unchecked:before:hover, .Checkmark.checked:before:hover,
+.viewSettingsPanel .columnSelector .cell.checkbox:before:hover,
+.slick-cell.celleffortdriven>div.changedRow:before:hover, .slick-cell.celleffortdriven>div.newRow:before:hover,
+.slick-cell.celleffortdriven>div.validRow:before:hover,
+.item-details-form-buttons button:before:hover,
+.ui-datepicker .ui-datepicker-prev:before:hover,
+.ui-datepicker .ui-datepicker-next:before:hover {
+	color: #005fb2;
+}
+.viewSettingsPanel .columnSelector .cell.checkbox {
+	cursor: pointer;
+}
+.viewSettingsPanel .columnSelector .cell.checkbox:before {
+	content: "b";
+}
+.viewSettingsPanel .columnSelector .cell.checkbox.selected:before {
+	content: "a";
+}
+.Checkmark.checked.multiEdit, .Checkmark.unchecked.multiEdit {
+	border: none;
+}
+.Checkmark.unchecked:before {
+	content: "b";
+}
+.Checkmark.checked:before {
+	content: "a";
+}
+.slick-cell.celleffortdriven>div.changedRow, .slick-cell.celleffortdriven>div.newRow {
+	height: 100%;
+	width: 100%;
+	padding: 0;
+}
+.slick-cell.celleffortdriven>div.changedRow:before, .slick-cell.celleffortdriven>div.newRow:before {
+	content: "c";
+}
+.slick-cell.celleffortdriven>div.validRow {
+	height: 100%;
+	width: 100%;
+}
+.slick-cell.celleffortdriven>div.validRow:before {
+	content: "d";
+}
+.item-details-form-buttons button {
+	width: 2.5rem;
+	padding-top: 0;
+	cursor: pointer;
+	color: #54698d;
+	font-weight: normal;
+}
+.item-details-form-buttons button.save:before {
+	content: "d";
+	font-size: 2rem;
+}
+.item-details-form-buttons button.cancel:before {
+	content: "e";
+	font-size: 2rem;
+}
+.ui-datepicker .ui-datepicker-prev:before {
+	content: "f";
+}
+.ui-datepicker .ui-datepicker-next:before {
+	content: "g";
+}
+.slick-cell.editable {
+	border-color: #0070d2;
+}
+.gridBusy {
+	background: rgba(200,200,200,0.5);
+}
+.viewSettingsPanel select,
+.item-details-form select {
+	background-color: #fff;
+	color: #16325c;
+	border: 1px solid #d8dde6;
+	border-radius: .25rem;
+	width: 100%;
+	transition: border .1s linear,background-color .1s linear;
+	height: calc(1.5rem + (1px * 2));
+}
+.viewSettingsPanel select:focus, .viewSettingsPanel select:active {
+	outline: 0;
+	border-color: #005fb2;
+	background-color: #fff;
+	box-shadow: 0 0 3px #0070d2;
+}
+.uploadFileWrapper input {
+	cursor: pointer;
+}
+.ui-widget-content.slick-row.even.slick-group, .ui-widget-content.slick-row.odd.slick-group {
+	background-color: #54698d;
+	border: none;
+}
+span.slick-group-title {
+	padding: 0 0.5rem;
+	color: #fff;
+}
+.slick-row.ui-widget-content.slick-group-totals {
+	background: #9faab5;
+}
+.grandTotal div {
+	background: #9faab5;
+	padding: 0.25rem;
+}

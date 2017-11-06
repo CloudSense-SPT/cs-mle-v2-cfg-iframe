@@ -1,0 +1,41 @@
+/* Lightning MLE */
+header {
+	border: 1px solid #cfd7e6;
+	border-bottom: 0;
+}
+
+footer {
+	border: 1px solid #cfd7e6;
+	border-top: 0;
+}
+header h2 {
+	display: none;
+}
+.settings-popup {
+	z-index: 9999;
+	top: 2px;
+}
+.item-details-form label {
+	padding: .5rem 1rem;
+}
+.slick-header-columns, .slick-headerrow-columns, .myGrid .slick-row {
+	border: 1px solid transparent;
+}
+.changed:before, .witherror:before {
+	color: #c23934;
+}
+.icon-error-triangle:before {
+	color: #ffb75d;
+}
+.witherror {
+	border: 1px solid rgba(194, 57, 52, 0.3);
+	box-shadow: 0 0 2px rgba(194, 57, 52, 0.21)
+}
+.spinner {
+	height: 100px;
+	width: 100px;
+	background: transparent url("../img/ProgressWheel.gif") no-repeat center / 100%;
+}
+footer .buttons-wrapper button:first-child {
+	display: none;
+}

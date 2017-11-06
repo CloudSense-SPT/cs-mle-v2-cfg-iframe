@@ -4,7 +4,9 @@ const MLEMessageTypes = {
 	SaveSuccess: 'mle-save-success',
 	SaveFail: 'mle-save-fail',
 	InvokeMLESave: 'mle-save-data',
-	IFrameInitialized: 'mle-child-initialized'
+	IFrameInitialized: 'mle-child-initialized',
+	DeleteSuccess: 'mle-delete-success',
+	DeleteFail: 'mle-delete-fail'
 };
 
 const MLEConstants = {
@@ -21,10 +23,31 @@ const MLEConstants = {
 			LinkedId: 'id'
 		},
 		DefaultPage: 'csmle__Editor',
-		DefaultClass: 'mle-iframe'
+		DefaultClass: 'mle-iframe',
+		DefaultBatchSize: 5
 	},
 	ContextDelimiter: '::'
 };
+
+function evaluateRulesAndWaitForFinishAsync() {
+	return new Promise(
+		(resolve, reject) => {
+			const oldIndicatorStop = CS.indicator.stop;
+			CS.indicator.stop = function () {
+				CS.indicator.stop = oldIndicatorStop;
+				const args = arguments;
+				try {
+					oldIndicatorStop.apply(this, args);
+					resolve(true);
+				} catch (e) {
+					reject(e);
+				}
+			};
+
+			CS.rules.evaluateAllRules();
+		}
+	);
+}
 
 function buildMleHooksMessage(identifier, type, context, body) {
 	let retVal = `${identifier}${MLEConstants.ContextDelimiter}${type}${MLEConstants.ContextDelimiter}${context}`;
@@ -169,12 +192,29 @@ function readSearchParameters() {
 		}
 
 		function invokeSaveAsync() {
-			var numberOfChangedItems = calculateNumberOfToBeSavedItems(mleAPI.$scope);
+			const numberOfErrorItems = calculateNumberOfInvalidItems(mleAPI.$scope);
+			if (numberOfErrorItems > 0) {
+				alert('Please use MLE save to resolve invalid configurations');
+				return Promise.reject('MLE save required to resolve invalid configurations');
+			}
+
+			const numberOfChangedItems = calculateNumberOfToBeSavedItems(mleAPI.$scope);
 			if (numberOfChangedItems > 0) {
 				// not to send single message twice
 				destroyListeners();
-				return mleAPI
-					.saveAsync()
+				const saveInternalAsync = () => {
+					return mleAPI
+						.saveAsync()
+						.then(
+							() => {
+								const remaining = calculateNumberOfToBeSavedItems(mleAPI.$scope);
+								if (remaining) {
+									return saveInternalAsync();
+								}
+							}
+						);
+				};
+				return saveInternalAsync()
 					.then(
 						() => {
 							populateListeneres();
@@ -194,16 +234,14 @@ function readSearchParameters() {
 		populateListeneres();
 		window.addEventListener(
 			'message',
-			function (event) {
+			event => {
 				const mleMsg = readMleMsgTypeAndContext(event.data);
 				if (mleMsg.type === MLEMessageTypes.InvokeMLESave) {
 					invokeSaveAsync()
 						.then(
 							sendMleSaveSuccessMessage,
 							sendMleSaveFailMessage
-						).catch(
-						sendMleSaveFailMessage
-					);
+						);
 				}
 			}
 		);
@@ -213,8 +251,58 @@ function readSearchParameters() {
 			'*'
 		);
 
-		function sendMleSaveSuccessMessage(numberOfSavedConfigs) {
-			numberOfSavedConfigs = numberOfSavedConfigs || workaroundNumberOfSavedConfigurations;
+		// MLE delete hack
+		(function () {
+			const oldRemove = mleAPI.$scope.CsService.removeConfigurations
+			mleAPI.$scope.CsService.removeConfigurations = function (configIds) {
+				return oldRemove
+					.apply(mleAPI.$scope.CsService, [configIds])
+					.then(
+						result => {
+							sendMleDeleteSuccessMessage(configIds);
+							return result;
+						},
+						error => {
+							sendMleDeleteFailedMessage(error);
+						}
+					)
+			}
+		})();
+
+		function sendMleDeleteSuccessMessage(deletedConfigurationIds) {
+			window.parent.postMessage(
+				buildMleHooksMessage(
+					getMleChildFrameIdentifier(),
+					MLEMessageTypes.DeleteSuccess,
+					getMleChildFrameIdentifier(),
+					{
+						ignoreRuleExecution: !deletedConfigurationIds.length,
+						deletedConfigIds: deletedConfigurationIds
+					}
+				),
+				'*'
+			);
+		}
+
+		function sendMleDeleteFailedMessage(error) {
+			window.parent.postMessage(
+				buildMleHooksMessage(
+					getMleChildFrameIdentifier(),
+					MLEMessageTypes.DeleteFail,
+					getMleChildFrameIdentifier(),
+					{
+						error: error
+					}
+				),
+				'*'
+			);
+		}
+
+		function sendMleSaveSuccessMessage(totalNumberOfConfigsToSave) {
+			totalNumberOfConfigsToSave = totalNumberOfConfigsToSave || workaroundNumberOfSavedConfigurations;
+			const remainingToSave = calculateNumberOfToBeSavedItems(mleAPI.$scope);
+			searchParams = searchParams || readSearchParameters();
+			const numberOfSavedConfigs = remainingToSave ? (searchParams.batchSize || MLEConstants.MLEFrameOptions.DefaultBatchSize) : totalNumberOfConfigsToSave;
 			window.parent.postMessage(
 				buildMleHooksMessage(
 					getMleChildFrameIdentifier(),
@@ -222,16 +310,22 @@ function readSearchParameters() {
 					getMleChildFrameIdentifier(),
 					{
 						ignoreRuleExecution: !numberOfSavedConfigs,
-						numberOfSavedConfigs: numberOfSavedConfigs
+						numberOfSavedConfigs: numberOfSavedConfigs,
+						remainingToSave: remainingToSave
 					}
 				),
 				'*'
 			);
 		}
 
-		function sendMleSaveFailMessage() {
+		function sendMleSaveFailMessage(error) {
 			window.parent.postMessage(
-				buildMleHooksMessage(getMleChildFrameIdentifier(), MLEMessageTypes.SaveFail, getMleChildFrameIdentifier()),
+				buildMleHooksMessage(
+					getMleChildFrameIdentifier(),
+					MLEMessageTypes.SaveFail,
+					getMleChildFrameIdentifier(),
+					{ error: error}
+				),
 				'*'
 			);
 		}
@@ -250,12 +344,25 @@ function readSearchParameters() {
 			0
 		);
 	}
+
+	function calculateNumberOfInvalidItems($scope) {
+		return $scope.CsService.grid.data.reduce(
+			function (agg, row) {
+				return agg + (row._MLE_Validate.status || row._MLE_Validate.message && row._MLE_Validate.message.length ? 1: 0)
+			},
+			0
+		);
+	}
 })();
 
 /*
  * configurator code handling
  */
 (function() {
+	const MLE_RESOURCE_NAME = 'mle_v2_cfg';
+	let developmentMode = false;
+
+	const resourceRND = Math.floor(Math.random() * 1000000);
 	// will work this only if we have require defined
 	if (typeof define === 'function') {
 		define(
@@ -335,7 +442,7 @@ function readSearchParameters() {
 									this._tail = element;
 								}
 								element.next = element.next.next;
-								
+
 								return true;
 							}
 							element = element.next;
@@ -371,15 +478,21 @@ function readSearchParameters() {
 					mleProperties.hooks[MLEMessageTypes.SaveSuccess] = mleProperties.onSaveSuccess;
 					mleProperties.hooks[MLEMessageTypes.SaveFail] = mleProperties.onSaveFail;
 					mleProperties.hooks[MLEMessageTypes.IFrameInitialized] = mleProperties.onInitialize;
+					mleProperties.hooks[MLEMessageTypes.DeleteSuccess] = mleProperties.onDeleteSuccess;
+					mleProperties.hooks[MLEMessageTypes.DeleteFail] = mleProperties.onDeleteFail;
 				}
 
 				function updateAttributeValue(props) {
 					CS.setAttributeValue(props.attributeName, props.attributeValue);
 				}
 
+				function readSitePrefix(props) {
+					return props.sitePrefix || '';
+				}
+
 				function buildMleIframeAttributeValue(props) {
 					const origin = window.location.origin;
-					const sitePrefix = props.sitePrefix || '';
+					const sitePrefix = readSitePrefix(props);
 					const iframeId = `mle-iframe-${props.identifier}`;
 					const iframeClassExtensions = props.iframeClasses || '';
 					const mlePage = props.mlePage || MLEConstants.MLEFrameOptions.DefaultPage;
@@ -387,6 +500,28 @@ function readSearchParameters() {
 
 					const parametersString = buildMleIframeParameterString(props);
 					return `<iframe id="${iframeId}" src="${origin}${sitePrefix}/apex/${mlePage}?${parametersString}" class="${MLEConstants.MLEFrameOptions.DefaultClass} ${iframeClassExtensions}" style="${mleIframeStyle}"></iframe>`;
+				}
+
+				function readIFrameCssLocation(mleProps) {
+					if (mleProps.css) {
+						return mleProps.css;
+					}
+					let styleSuffix = '-le';
+					if (mleProps.useStandardStylesheet) {
+						styleSuffix = '';
+					}
+					const sitePrefix = readSitePrefix(mleProps);
+					const rnd = developmentMode ? `/${resourceRND}` : '';
+					return `${sitePrefix}/resource${rnd}/${MLE_RESOURCE_NAME}/css/iframe${styleSuffix}.css`;
+				}
+
+				function readIFrameJsLocation(mleProps) {
+					if (mleProps.js) {
+						return mleProps.js;
+					}
+					const rnd = developmentMode ? `/${resourceRND}` : '';
+					const sitePrefix = readSitePrefix(mleProps);
+					return `${sitePrefix}/resource${rnd}/${MLE_RESOURCE_NAME}/js/script.js`;
 				}
 
 				function buildMleIframeParameterString(props) {
@@ -397,7 +532,7 @@ function readSearchParameters() {
 						},
 						{
 							name: MLEConstants.MLEFrameOptions.Params.BatchSize,
-							value: props.batchSize || 5
+							value: props.batchSize || MLEConstants.MLEFrameOptions.DefaultBatchSize
 						},
 						{
 							name: MLEConstants.MLEFrameOptions.Params.ShowHeader,
@@ -417,11 +552,11 @@ function readSearchParameters() {
 						},
 						{
 							name: MLEConstants.MLEFrameOptions.Params.CssOverride,
-							value: props.css
+							value: readIFrameCssLocation(props)
 						},
 						{
 							name: MLEConstants.MLEFrameOptions.Params.JsOverride,
-							value: props.js
+							value: readIFrameJsLocation(props)
 						},
 						{
 							name: MLEConstants.MLEFrameOptions.Params.LinkedId,
@@ -436,13 +571,25 @@ function readSearchParameters() {
 				function storeMLEAsync(mleProps) {
 					return new Promise(
 						(resolve, reject) => {
-							function saveSuccessHandler() {
-								resolve(true);
+							function saveSuccessHandler(message) {
+								try {
+									const numberOfSavedConfigurations = message && message.body && message.body.numberOfSavedConfigs;
+									resolve({
+										numberOfSavedConfigs: numberOfSavedConfigurations
+									});
+								} catch (e) {
+									reject(e);
+								}
+
 								removeHandlers();
 							}
 
-							function saveFailHandler(error)  {
-								reject(error || 'Error while saving mle iframe');
+							function saveFailHandler(e)  {
+								let msg = e && e.message || e;
+								if (msg.body && msg.body.error) {
+									msg = msg.body.error;
+								}
+								reject(msg || 'Error while saving mle iframe');
 								removeHandlers();
 							}
 
@@ -499,6 +646,10 @@ function readSearchParameters() {
 						throw `Please provide attributeName option when initializing MLE`;
 					}
 
+					if (!opts.linkedId) {
+						throw `Please provide linkedId option when initializing MLE`;
+					}
+
 					const identifier = opts.identifier || opts.attributeName;
 
 					let mleProperties = internalMLEStructures[identifier];
@@ -534,12 +685,11 @@ function readSearchParameters() {
 							}
 
 							invokeQueue(mleProps.handlerQueue[message.type], message);
+							invokeHook(mleProps.hooks && mleProps.hooks[message.type], message);
 
 							if (message.type !== MLEMessageTypes.IFrameInitialized && (!message.body || !message.body.ignoreRuleExecution)) {
 								CS.rules.evaluateAllRules();
 							}
-
-							invokeHook(mleProps.hooks && mleProps.hooks[message.type], message);
 
 							console.log(`Processed MLE message "${message.type}" from "${mleProps.identifier}"`);
 						}
@@ -593,7 +743,9 @@ function readSearchParameters() {
 						}
 						return storeMLEAsync(mleProps);
 					},
-					reloadTopParentOnFinish: false
+					enableDevelopmentMode: function() {
+						developmentMode = true;
+					}
 				};
 
 				return CS.SE.MLE;
@@ -608,12 +760,36 @@ function readSearchParameters() {
 				const oldFinish = window.finish;
 				if (typeof oldFinish === 'function') {
 					window.finish = function finishOverride() {
+						const self = this;
 						const args = arguments;
 						mleAPI
 							.saveAllAsync()
 							.then(
-								() => oldFinish(args),
-								e => CS.Log.error('Error while saving MLE before configurator finish', e)
+								(results) => {
+									const totalNumberOfSavedConfigs = results.reduce(
+										(agg, res) => agg + res.numberOfSavedConfigs,
+										0
+									);
+									if (totalNumberOfSavedConfigs) {
+										return evaluateRulesAndWaitForFinishAsync().then(() => results);
+									}
+									return results;
+								}
+							)
+							.then(
+								(result) => {
+									console.log('Save result', result);
+									oldFinish.apply(self, args);
+								},
+								e => {
+									let msg = e && e.message || e;
+									if (msg.body && msg.body.error) {
+										msg = msg.body.error;
+									}
+									CS.Log.error('Error while saving MLE before configurator finish', msg);
+									jQuery('button[data-cs-group="Finish"]').removeAttr('disabled').css('opacity', '1');
+									CS.displayInfo && CS.displayInfo(`Error while saving MLE: ${msg}`);
+								}
 							);
 					}
 				}
