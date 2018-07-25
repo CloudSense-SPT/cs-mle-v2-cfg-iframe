@@ -1,5 +1,5 @@
 require(
-	['./src/cs-full'],
+	['cs_js/cs-full'],
 	function (CS) {
 		var prefix = CS.Util.configuratorPrefix;
 		//Generic fix for flickering iframes

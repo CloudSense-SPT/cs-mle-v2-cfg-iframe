@@ -367,7 +367,7 @@ function readSearchParameters() {
 	if (typeof define === 'function') {
 		define(
 			'mle-v2-api',
-			['./src/cs-full'],
+			['cs_js/cs-full'],
 			function (CS) {
 				class QueueElement {
 					constructor(value) {
