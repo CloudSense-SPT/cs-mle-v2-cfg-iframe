@@ -12,7 +12,7 @@ require(
 				function shouldUpdateValue(element, newValue) {
 					var valueBindingRef = CS.Service.getCurrentScreenRef() + ':' + element.id;
 					// value has changed, or we have switched screens and it needs to be initialized
-					if (oldHtmlValues[valueBindingRef] !== newValue || newValue && !element.innerHTML) {
+					if (oldHtmlValues[valueBindingRef] !== newValue || jQuery('<random></random>').html(newValue).html() !== element.innerHTML) {
 						oldHtmlValues[valueBindingRef] = newValue;
 						return true;
 					}
