@@ -753,45 +753,56 @@ function readSearchParameters() {
 		);
 
 		require(
-			['mle-v2-api'],
-			function(mleAPI) {
+			['mle-v2-api', 'cs_js/cs-full'],
+			function(mleAPI, CS) {
 				console.log('MLE v2 API initialised. Use CS.SE.MLE as reference.', mleAPI);
 
-				const oldFinish = window.finish;
-				if (typeof oldFinish === 'function') {
-					window.finish = function finishOverride() {
-						const self = this;
-						const args = arguments;
-						mleAPI
-							.saveAllAsync()
-							.then(
-								(results) => {
-									const totalNumberOfSavedConfigs = results.reduce(
-										(agg, res) => agg + res.numberOfSavedConfigs,
-										0
-									);
-									if (totalNumberOfSavedConfigs) {
-										return evaluateRulesAndWaitForFinishAsync().then(() => results);
-									}
-									return results;
-								}
-							)
-							.then(
-								(result) => {
-									console.log('Save result', result);
-									oldFinish.apply(self, args);
-								},
-								e => {
-									let msg = e && e.message || e;
-									if (msg.body && msg.body.error) {
-										msg = msg.body.error;
-									}
-									CS.Log.error('Error while saving MLE before configurator finish', msg);
-									jQuery('button[data-cs-group="Finish"]').removeAttr('disabled').css('opacity', '1');
-									CS.displayInfo && CS.displayInfo(`Error while saving MLE: ${msg}`);
-								}
-							);
+				CS.EventHandler.subscribe(
+					CS.EventHandler.Event.CONFIGURATOR_READY,
+					() => {
+						[
+							'Finish', 'Continue', 'Save', 'AddOrEditRelatedProduct',
+							'AddRelatedProduct', 'EditRelatedProduct', 'ChangeScreen',
+							'NextScreen', 'PreviousScreen'
+						].forEach(
+							actionName => {
+								const actionDescriptor = CS.UI.Actions.find(actionName);
+								const oldAction = actionDescriptor.action;
+								actionDescriptor.action = function () {
+									const args = arguments;
+									saveAsync().then(() => oldAction.bind(args)())
+								};
+							}
+						);
 					}
+				);
+
+				function saveAsync() {
+					return mleAPI
+						.saveAllAsync()
+						.then(
+							results => {
+								const totalNumberOfSavedConfigs = results.reduce(
+									(agg, res) => agg + res.numberOfSavedConfigs,
+									0
+								);
+								if (totalNumberOfSavedConfigs) {
+									return evaluateRulesAndWaitForFinishAsync().then(() => results);
+								}
+								return results;
+							},
+							e => {
+								let msg = e && e.message || e;
+								if (msg.body && msg.body.error) {
+									msg = msg.body.error;
+								}
+								CS.Log.error('Error while saving MLE before configurator finish', msg);
+								jQuery('button[data-cs-group="Finish"]').removeAttr('disabled').css('opacity', '1');
+								CS.displayInfo && CS.displayInfo(`Error while saving MLE: ${msg}`);
+
+								return Promise.reject(e);
+							}
+						);
 				}
 			}
 		);
