@@ -769,8 +769,9 @@ function readSearchParameters() {
 								const actionDescriptor = CS.UI.Actions.find(actionName);
 								const oldAction = actionDescriptor.action;
 								actionDescriptor.action = function () {
+									const self = this;
 									const args = arguments;
-									saveAsync().then(() => oldAction.apply(null, args));
+									saveAsync().then(() => oldAction.apply(self, args));
 								};
 							}
 						);
