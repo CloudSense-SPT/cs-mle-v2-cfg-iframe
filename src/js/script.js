@@ -770,7 +770,7 @@ function readSearchParameters() {
 								const oldAction = actionDescriptor.action;
 								actionDescriptor.action = function () {
 									const args = arguments;
-									saveAsync().then(() => oldAction.bind(args)())
+									saveAsync().then(() => oldAction.apply(null, args));
 								};
 							}
 						);
